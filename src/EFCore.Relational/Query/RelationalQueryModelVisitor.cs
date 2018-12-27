@@ -1197,51 +1197,43 @@ namespace Microsoft.EntityFrameworkCore.Query
 
                     var oldShaper = ExtractShaper(shapedQuery, 0);
 
-                    var matchingIncludes
-                        = from i in QueryCompilationContext.QueryAnnotations.OfType<IncludeResultOperator>()
-                          where oldShaper.IsShaperForQuerySource(i.QuerySource)
-                          select i;
+                    var materializer = (LambdaExpression)methodCallExpression.Arguments[1];
 
-                    if (!matchingIncludes.Any())
-                    {
-                        var materializer = (LambdaExpression)methodCallExpression.Arguments[1];
+					if (selectClause.Selector.Type == typeof(AnonymousObject))
+					{
+						// We will end up fully translating this projection, so turn
+						// this into a no-op.
 
-                        if (selectClause.Selector.Type == typeof(AnonymousObject))
-                        {
-                            // We will end up fully translating this projection, so turn
-                            // this into a no-op.
+						materializer
+							= Expression.Lambda(
+								Expression.Default(typeof(AnonymousObject)),
+								materializer.Parameters);
+					}
 
-                            materializer
-                                = Expression.Lambda(
-                                    Expression.Default(typeof(AnonymousObject)),
-                                    materializer.Parameters);
-                        }
+					var qsreFinder = new QuerySourceReferenceFindingExpressionVisitor();
 
-                        var qsreFinder = new QuerySourceReferenceFindingExpressionVisitor();
+					qsreFinder.Visit(materializer.Body);
 
-                        qsreFinder.Visit(materializer.Body);
+					if (!qsreFinder.FoundAny)
+					{
+						Shaper newShaper = null;
 
-                        if (!qsreFinder.FoundAny)
-                        {
-                            Shaper newShaper = null;
+						if (selectClause.Selector is QuerySourceReferenceExpression querySourceReferenceExpression)
+						{
+							newShaper = oldShaper.Unwrap(querySourceReferenceExpression.ReferencedQuerySource);
+						}
 
-                            if (selectClause.Selector is QuerySourceReferenceExpression querySourceReferenceExpression)
-                            {
-                                newShaper = oldShaper.Unwrap(querySourceReferenceExpression.ReferencedQuerySource);
-                            }
+						newShaper = newShaper ?? ProjectionShaper.Create(oldShaper, materializer, _storeMaterializerExpression);
 
-                            newShaper = newShaper ?? ProjectionShaper.Create(oldShaper, materializer, _storeMaterializerExpression);
-
-                            Expression =
-                                Expression.Call(
-                                    shapedQuery.Method
-                                        .GetGenericMethodDefinition()
-                                        .MakeGenericMethod(Expression.Type.GetSequenceType()),
-                                    shapedQuery.Arguments[0],
-                                    shapedQuery.Arguments[1],
-                                    Expression.Constant(newShaper));
-                        }
-                    }
+						Expression =
+							Expression.Call(
+								shapedQuery.Method
+									.GetGenericMethodDefinition()
+									.MakeGenericMethod(Expression.Type.GetSequenceType()),
+								shapedQuery.Arguments[0],
+								shapedQuery.Arguments[1],
+								Expression.Constant(newShaper));
+					}
                 }
             }
         }
