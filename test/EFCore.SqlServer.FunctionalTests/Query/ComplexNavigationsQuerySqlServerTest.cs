@@ -982,8 +982,8 @@ WHERE ((([e.OneToOne_Required_FK1.OneToOne_Required_FK2].[Id] = [e.OneToOne_Requ
                 @"SELECT [e].[Name], [e.OneToOne_Required_FK_Inverse3.OneToOne_Optional_FK_Inverse2].[Id]
 FROM [LevelThree] AS [e]
 INNER JOIN [LevelTwo] AS [e.OneToOne_Required_FK_Inverse3] ON [e].[Level2_Required_Id] = [e.OneToOne_Required_FK_Inverse3].[Id]
-INNER JOIN [LevelOne] AS [e.OneToOne_Required_FK_Inverse3.OneToOne_Required_FK_Inverse2] ON [e.OneToOne_Required_FK_Inverse3].[Level1_Required_Id] = [e.OneToOne_Required_FK_Inverse3.OneToOne_Required_FK_Inverse2].[Id]
 LEFT JOIN [LevelOne] AS [e.OneToOne_Required_FK_Inverse3.OneToOne_Optional_FK_Inverse2] ON [e.OneToOne_Required_FK_Inverse3].[Level1_Optional_Id] = [e.OneToOne_Required_FK_Inverse3.OneToOne_Optional_FK_Inverse2].[Id]
+INNER JOIN [LevelOne] AS [e.OneToOne_Required_FK_Inverse3.OneToOne_Required_FK_Inverse2] ON [e.OneToOne_Required_FK_Inverse3].[Level1_Required_Id] = [e.OneToOne_Required_FK_Inverse3.OneToOne_Required_FK_Inverse2].[Id]
 WHERE ([e.OneToOne_Required_FK_Inverse3.OneToOne_Required_FK_Inverse2].[Id] = [e.OneToOne_Required_FK_Inverse3.OneToOne_Optional_FK_Inverse2].[Id]) AND (([e.OneToOne_Required_FK_Inverse3.OneToOne_Optional_FK_Inverse2].[Id] <> 7) OR [e.OneToOne_Required_FK_Inverse3.OneToOne_Optional_FK_Inverse2].[Id] IS NULL)");
         }
 

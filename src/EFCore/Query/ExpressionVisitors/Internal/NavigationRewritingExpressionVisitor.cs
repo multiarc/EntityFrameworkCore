@@ -188,6 +188,15 @@ namespace Microsoft.EntityFrameworkCore.Query.ExpressionVisitors.Internal
                     return;
                 }
 
+                if (queryModel.MainFromClause != QuerySource)
+                {
+                    var newIndexTry = queryModel.BodyClauses.IndexOf(QuerySource as JoinClause);
+                    if (newIndexTry >= 0)
+                    {
+                        insertionIndex = newIndexTry + 1;
+                    }
+                }
+
                 queryModel.BodyClauses.Insert(insertionIndex++, JoinClause ?? (IBodyClause)GroupJoinClause);
 
                 foreach (var additionalBodyClause in AdditionalBodyClauses)
